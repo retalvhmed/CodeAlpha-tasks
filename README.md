@@ -1,25 +1,29 @@
-# Bench & Bolt
+# Tasklane
 
-A small e-commerce site: Express.js + SQLite backend, plain HTML/CSS/JS frontend.
+Trello/Asana-style collaborative boards. Express + SQLite + WebSockets, vanilla JS frontend.
 
-## Run it
-    npm install
-    npm start
-Open http://localhost:3000. The database (shop.db) and 8 demo products are created on first run.
-Set SESSION_SECRET in production.
+## Run
+```
+npm install
+npm start          # http://localhost:3000
+```
+Set `JWT_SECRET` in production. The database file `data.db` is created on first run.
 
-## Structure
-- server.js: REST API (products, auth, orders), sessions
-- db.js: SQLite schema (users, products, orders, order_items) + seed data
-- public/: pages (index, product, cart, login, orders), css/style.css, js/app.js
+## Try it
+1. Register two accounts (use a second browser or a private window).
+2. Account A: create a project, then **Add member** with account B's email.
+3. Add tasks, assign them, drag cards between columns, and comment.
+4. Account B sees changes and notifications instantly.
 
 ## API
-GET  /api/products?q=&category=   GET /api/products/:id   GET /api/categories
-POST /api/register  POST /api/login  POST /api/logout  GET /api/me
-POST /api/orders (auth)  GET /api/orders (auth)
-
-## Notes
-- Passwords are hashed with bcrypt; sessions use an httpOnly cookie.
-- The cart lives in the browser. At checkout the server recalculates prices
-  and checks stock inside one database transaction.
-- Payment is not integrated: orders are saved as "placed". Add Stripe or similar next.
+| Method | Path | Purpose |
+|---|---|---|
+| POST | /api/auth/register, /api/auth/login | Sign up / sign in (returns JWT) |
+| GET/POST | /api/projects | List / create projects |
+| GET | /api/projects/:id | Project with members and tasks |
+| POST | /api/projects/:id/members | Add member by email |
+| POST | /api/projects/:id/tasks | Create task |
+| PATCH/DELETE | /api/tasks/:id | Update (status, assignee, ...) / delete |
+| GET/POST | /api/tasks/:id/comments | Task comments |
+| GET, POST | /api/notifications, /api/notifications/read | Notifications |
+| WS | /ws?token=JWT | Live `update` and `notification` events |

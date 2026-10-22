@@ -1,17 +1,213 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bench &amp; Bolt</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tasklane</title>
+<style>
+:root{--bg:#e9eef3;--panel:#f7f9fb;--col:#dce4ec;--ink:#17283b;--mute:#5d6f82;--line:#c6d1dc;--accent:#0b7a75;--accent-ink:#fff;--warn:#b3402a;--card:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#10181f;--panel:#16212b;--col:#1b2935;--ink:#e6edf3;--mute:#8da0b3;--line:#2b3b4a;--accent:#38b6ae;--accent-ink:#06201e;--warn:#ff8a72;--card:#223241}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 "Avenir Next","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);padding:7px 12px;border-radius:6px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.link{border:0;background:none;color:var(--mute);padding:4px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,textarea,select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+textarea{resize:vertical;min-height:70px}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+.err{color:var(--warn);min-height:20px;font-size:14px;margin-top:8px}
+.auth{max-width:360px;margin:12vh auto;padding:28px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.auth h1{margin:0 0 4px;font-size:28px;letter-spacing:-.02em}
+.auth p{margin:0 0 12px;color:var(--mute)}
+.shell{display:grid;grid-template-columns:240px 1fr;grid-template-rows:auto 1fr;height:100vh}
+header{grid-column:1/3;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--ink);color:var(--bg)}
+header b{font-size:18px;letter-spacing:-.02em}
+header .sp{flex:1}
+header button{background:transparent;color:inherit;border-color:#ffffff40}
+.bell{position:relative}
+.bell i{position:absolute;top:-6px;right:-6px;background:var(--warn);color:#fff;font-style:normal;font-size:11px;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:14px;overflow:auto}
+aside h3{margin:0 0 8px;font-size:14px;color:var(--mute);font-weight:600}
+.proj{display:block;width:100%;text-align:left;margin-bottom:4px;border:0;background:none}
+.proj.on{background:var(--col);font-weight:600}
+main{padding:16px;overflow:auto}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.top h2{margin:0;font-size:22px;letter-spacing:-.02em}
+.people{display:flex;gap:4px}
+.av{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:12px;font-weight:700}
+.board{display:grid;grid-template-columns:repeat(3,minmax(250px,1fr));gap:12px;align-items:start;min-width:780px}
+.col{background:var(--col);border-radius:10px;padding:10px;min-height:200px}
+.col.over{outline:2px dashed var(--accent)}
+.col h4{margin:0 0 10px;display:flex;justify-content:space-between;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;cursor:grab}
+.card:hover{border-color:var(--accent)}
+.card .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:var(--mute)}
+.add{display:flex;gap:6px;margin-top:6px}
+.empty{color:var(--mute);padding:40px 0;text-align:center}
+.overlay{position:fixed;inset:0;background:#0009;display:grid;place-items:center;padding:12px;z-index:5}
+.modal{background:var(--panel);border-radius:10px;width:min(560px,100%);max-height:92vh;overflow:auto;padding:18px}
+.modal .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cm{padding:8px 0;border-top:1px solid var(--line)}
+.cm small{color:var(--mute)}
+.drawer{position:fixed;top:52px;right:12px;width:min(340px,92vw);max-height:70vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;z-index:4}
+.drawer div{padding:8px;border-radius:6px;cursor:pointer}
+.drawer .un{background:var(--col)}
+@media (max-width:760px){.shell{grid-template-columns:1fr;grid-template-rows:auto auto 1fr}header{grid-column:1}aside{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
 </head>
-<body data-page="home">
-  <header class="site" id="site-header"></header>
-  <main id="app" class="wrap"></main>
-  <script src="/js/app.js"></script>
+<body>
+<div id="app"></div>
+<script>
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const[x,v]of Object.entries(a)){if(x.startsWith('on'))e.addEventListener(x.slice(2),v);else if(x==='class')e.className=v;else if(v!==false&&v!=null)e.setAttribute(x,v)}for(const c of k.flat())if(c!=null&&c!==false)e.append(c.nodeType?c:document.createTextNode(c));return e};
+const COLS=[['todo','To do'],['doing','In progress'],['done','Done']];
+let token=localStorage.getItem('token'),me=null,projects=[],cur=null,notes=[],showNotes=false,openId=null,comments=[],ws;
+
+async function api(path,method='GET',body){
+  const r=await fetch('/api'+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});
+  const d=await r.json().catch(()=>({}));
+  if(r.status===401&&token)logout();
+  if(!r.ok)throw new Error(d.error||'Request failed');
+  return d;
+}
+const initials=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const person=id=>cur?.members.find(m=>m.id===id);
+
+function logout(){localStorage.removeItem('token');token=null;me=null;cur=null;ws&&ws.close();render()}
+
+async function start(){
+  if(token){try{me=await api('/me');await loadProjects();await loadNotes();connect()}catch{token=null}}
+  render();
+}
+async function loadProjects(){projects=await api('/projects');if(!cur&&projects[0])await selectProject(projects[0].id)}
+async function selectProject(id){cur=await api('/projects/'+id);render()}
+async function loadNotes(){notes=await api('/notifications')}
+async function loadComments(){if(openId)comments=await api(`/tasks/${openId}/comments`)}
+
+function connect(){
+  ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws?token='+token);
+  ws.onmessage=async e=>{
+    const m=JSON.parse(e.data);
+    if(m.type==='notification'){notes.unshift(m.notification);render();return}
+    if(m.type==='update'){
+      if(cur&&cur.id===m.projectId)cur=await api('/projects/'+cur.id).catch(()=>cur);
+      if(openId&&!cur.tasks.some(t=>t.id===openId))openId=null;
+      if(openId)await loadComments();
+      render();
+    }
+  };
+  ws.onclose=()=>{if(token)setTimeout(connect,2000)};
+}
+
+// ---------- Views ----------
+function authView(){
+  let mode='login';const box=el('div',{class:'auth'});
+  const draw=()=>{
+    const f={name:el('input',{autocomplete:'name'}),email:el('input',{type:'email',autocomplete:'email'}),pw:el('input',{type:'password',autocomplete:mode==='login'?'current-password':'new-password'})};
+    const err=el('div',{class:'err',role:'alert'});
+    const go=async()=>{try{
+      const d=await api('/auth/'+(mode==='login'?'login':'register'),'POST',{name:f.name.value,email:f.email.value,password:f.pw.value});
+      token=d.token;me=d.user;localStorage.setItem('token',token);cur=null;await loadProjects();await loadNotes();connect();render();
+    }catch(e){err.textContent=e.message}};
+    [f.name,f.email,f.pw].forEach(i=>i.addEventListener('keydown',e=>e.key==='Enter'&&go()));
+    box.replaceChildren(el('h1',{},'Tasklane'),el('p',{},mode==='login'?'Sign in to your boards.':'Create an account to start a project.'),
+      mode==='register'&&[el('label',{},'Name'),f.name],el('label',{},'Email'),f.email,el('label',{},'Password'),f.pw,err,
+      el('div',{style:'display:flex;gap:8px;margin-top:12px;align-items:center'},
+        el('button',{class:'primary',onclick:go},mode==='login'?'Sign in':'Create account'),
+        el('button',{class:'link',onclick:()=>{mode=mode==='login'?'register':'login';draw()}},mode==='login'?'Need an account?':'Have an account?')));
+  };
+  draw();return box;
+}
+
+function header(){
+  const unread=notes.filter(n=>!n.read).length;
+  return el('header',{},el('b',{},'Tasklane'),el('span',{class:'sp'}),
+    el('button',{class:'bell',onclick:async()=>{showNotes=!showNotes;if(!showNotes&&unread){await api('/notifications/read','POST');notes.forEach(n=>n.read=1)}render()}},'Notifications',unread?el('i',{},unread):null),
+    el('span',{},me.name),el('button',{onclick:logout},'Sign out'));
+}
+
+function sidebar(){
+  return el('aside',{},el('h3',{},'Projects'),
+    projects.map(p=>el('button',{class:'proj'+(cur?.id===p.id?' on':''),onclick:()=>selectProject(p.id)},p.name)),
+    el('button',{style:'margin-top:10px;width:100%',onclick:async()=>{
+      const name=prompt('Project name');if(!name)return;
+      const p=await api('/projects','POST',{name});projects.unshift(p);await selectProject(p.id)}},'New project'));
+}
+
+function board(){
+  if(!cur)return el('div',{class:'empty'},'Create your first project to start a board.');
+  const top=el('div',{class:'top'},el('h2',{},cur.name),
+    el('div',{class:'people',title:cur.members.map(m=>m.name).join(', ')},cur.members.map(m=>el('div',{class:'av'},initials(m.name)))),
+    el('button',{onclick:async()=>{
+      const email=prompt('Email of the person to add (they need an account)');if(!email)return;
+      try{await api(`/projects/${cur.id}/members`,'POST',{email});await selectProject(cur.id)}catch(e){alert(e.message)}}},'Add member'));
+  const cols=COLS.map(([key,label])=>{
+    const tasks=cur.tasks.filter(t=>t.status===key);
+    const input=el('input',{placeholder:'New task title'});
+    const add=async()=>{if(!input.value.trim())return;try{await api(`/projects/${cur.id}/tasks`,'POST',{title:input.value});input.value='';await selectProject(cur.id)}catch(e){alert(e.message)}};
+    input.addEventListener('keydown',e=>e.key==='Enter'&&add());
+    const col=el('div',{class:'col'},el('h4',{},label,el('span',{},tasks.length)),tasks.map(card),
+      key==='todo'&&el('div',{class:'add'},input,el('button',{onclick:add},'Add')));
+    col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('over')});
+    col.addEventListener('dragleave',()=>col.classList.remove('over'));
+    col.addEventListener('drop',async e=>{e.preventDefault();col.classList.remove('over');
+      const id=Number(e.dataTransfer.getData('text'));const t=cur.tasks.find(x=>x.id===id);
+      if(t&&t.status!==key){t.status=key;render();await api('/tasks/'+id,'PATCH',{status:key}).catch(()=>selectProject(cur.id))}});
+    return col;
+  });
+  return el('div',{},top,el('div',{style:'overflow-x:auto'},el('div',{class:'board'},cols)));
+}
+
+function card(t){
+  const a=person(t.assignee_id);
+  const c=el('div',{class:'card',draggable:'true',tabindex:'0',onclick:async()=>{openId=t.id;await loadComments();render()}},
+    el('div',{},t.title),
+    el('div',{class:'meta'},el('span',{},(t.comment_count?t.comment_count+' comments':'')+(t.due_date?(t.comment_count?' · ':'')+'due '+t.due_date:'')),
+      a?el('span',{class:'av',title:a.name},initials(a.name)):el('span',{},'Unassigned')));
+  c.addEventListener('dragstart',e=>e.dataTransfer.setData('text',t.id));
+  c.addEventListener('keydown',e=>e.key==='Enter'&&c.click());
+  return c;
+}
+
+function modal(){
+  const t=cur?.tasks.find(x=>x.id===openId);if(!t)return null;
+  const title=el('input',{value:t.title});
+  const desc=el('textarea',{},t.description||'');
+  const status=el('select',{},COLS.map(([k,l])=>el('option',{value:k,selected:k===t.status},l)));
+  const who=el('select',{},el('option',{value:''},'Unassigned'),cur.members.map(m=>el('option',{value:m.id,selected:m.id===t.assignee_id},m.name)));
+  const due=el('input',{type:'date',value:t.due_date||''});
+  const cmt=el('textarea',{placeholder:'Write a comment'});
+  const err=el('div',{class:'err',role:'alert'});
+  const close=()=>{openId=null;render()};
+  const save=async()=>{try{await api('/tasks/'+t.id,'PATCH',{title:title.value,description:desc.value,status:status.value,assignee_id:who.value?Number(who.value):null,due_date:due.value||null});await selectProject(cur.id);close()}catch(e){err.textContent=e.message}};
+  const post=async()=>{try{await api(`/tasks/${t.id}/comments`,'POST',{body:cmt.value});cmt.value='';await loadComments();await selectProject(cur.id)}catch(e){err.textContent=e.message}};
+  const m=el('div',{class:'modal',role:'dialog','aria-label':'Task details'},
+    el('label',{},'Title'),title,el('label',{},'Description'),desc,
+    el('div',{class:'row'},el('div',{},el('label',{},'Status'),status),el('div',{},el('label',{},'Assignee'),who)),
+    el('label',{},'Due date'),due,err,
+    el('div',{style:'display:flex;gap:8px;margin:12px 0'},el('button',{class:'primary',onclick:save},'Save task'),el('button',{onclick:close},'Close'),
+      el('button',{class:'link',style:'margin-left:auto;color:var(--warn)',onclick:async()=>{if(confirm('Delete this task?')){await api('/tasks/'+t.id,'DELETE');openId=null;await selectProject(cur.id)}}},'Delete task')),
+    el('h3',{},'Comments'),
+    comments.length?comments.map(c=>el('div',{class:'cm'},el('small',{},c.author+' · '+c.created_at),el('div',{},c.body))):el('div',{class:'empty',style:'padding:12px'},'No comments yet. Start the discussion below.'),
+    cmt,el('div',{style:'margin-top:8px'},el('button',{class:'primary',onclick:post},'Post comment')));
+  const o=el('div',{class:'overlay',onclick:e=>e.target===o&&close()},m);
+  return o;
+}
+
+function drawer(){
+  if(!showNotes)return null;
+  return el('div',{class:'drawer'},notes.length?notes.map(n=>el('div',{class:n.read?'':'un',onclick:async()=>{
+    showNotes=false;if(n.project_id)await selectProject(n.project_id);if(n.task_id){openId=n.task_id;await loadComments()}
+    await api('/notifications/read','POST');notes.forEach(x=>x.read=1);render()}},n.text,el('div',{style:'font-size:12px;color:var(--mute)'},n.created_at))):el('div',{},'No notifications yet.'));
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(!me){app.replaceChildren(authView());return}
+  app.replaceChildren(el('div',{class:'shell'},header(),sidebar(),el('main',{},board())),drawer(),modal());
+}
+start();
+</script>
 </body>
 </html>
